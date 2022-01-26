@@ -32,7 +32,10 @@ class ConstantEpsilonGreedy(explorer.Explorer):
             self.epsilon, self.random_action_func, greedy_action_func
         )
         greedy_str = "greedy" if greedy else "non-greedy"
-        self.logger.debug("t:%s a:%s %s", t, a, greedy_str)
+
+        if t%500 == 0:
+            self.logger.debug("t:%s a:%s %s", t, a, greedy_str)
+        
         return a
 
     def __repr__(self):
@@ -81,7 +84,9 @@ class LinearDecayEpsilonGreedy(explorer.Explorer):
             self.epsilon, self.random_action_func, greedy_action_func
         )
         greedy_str = "greedy" if greedy else "non-greedy"
-        self.logger.debug("t:%s a:%s %s", t, a, greedy_str)
+        
+        if t%500 == 0:
+            self.logger.debug("t:%s a:%s %s", t, a, greedy_str)
         return a
 
     def __repr__(self):
@@ -127,7 +132,9 @@ class ExponentialDecayEpsilonGreedy(explorer.Explorer):
             self.epsilon, self.random_action_func, greedy_action_func
         )
         greedy_str = "greedy" if greedy else "non-greedy"
-        self.logger.debug("t:%s a:%s %s", t, a, greedy_str)
+        
+        if t%500 == 0:
+            self.logger.debug("t:%s a:%s %s", t, a, greedy_str)
         return a
 
     def __repr__(self):

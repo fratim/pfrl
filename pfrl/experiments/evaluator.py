@@ -445,7 +445,7 @@ class Evaluator(object):
         self.use_tensorboard = use_tensorboard
         self.max_episode_len = max_episode_len
         self.step_offset = step_offset
-        self.prev_eval_t = self.step_offset - self.step_offset % self.eval_interval
+        self.prev_eval_t = self.step_offset - self.step_offset % self.eval_interval - self.eval_interval
         self.evaluation_hooks = evaluation_hooks
         self.save_best_so_far_agent = save_best_so_far_agent
         self.logger = logger or logging.getLogger(__name__)

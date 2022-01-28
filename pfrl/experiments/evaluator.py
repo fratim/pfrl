@@ -317,19 +317,19 @@ def create_tb_writer(outdir):
     from torch.utils.tensorboard import SummaryWriter
 
     tb_writer = SummaryWriter(log_dir=outdir)
-    layout = {
-        "Aggregate Charts": {
-            "mean w/ min-max": [
-                "Margin",
-                ["eval/mean", "eval/min", "eval/max"],
-            ],
-            "mean +/- std": [
-                "Margin",
-                ["eval/mean", "extras/meanplusstdev", "extras/meanminusstdev"],
-            ],
-        }
-    }
-    tb_writer.add_custom_scalars(layout)
+    # layout = {
+    #     "Aggregate Charts": {
+    #         "mean w/ min-max": [
+    #             "Margin",
+    #             ["eval/mean", "eval/min", "eval/max"],
+    #         ],
+    #         "mean +/- std": [
+    #             "Margin",
+    #             ["eval/mean", "extras/meanplusstdev", "extras/meanminusstdev"],
+    #         ],
+    #     }
+    # }
+    # tb_writer.add_custom_scalars(layout)
     return tb_writer
 
 
@@ -352,6 +352,14 @@ def record_tb_stats(summary_writer, agent_stats, eval_stats, env_stats, t):
     summary_writer.add_scalar(
         "extras/meanminusstdev", eval_stats["mean"] - eval_stats["stdev"], t, cur_time
     )
+
+    # manually flush to avoid loosing events on termination
+    summary_writer.flush()
+
+def record_tb_stats_from_training(summary_writer, speed, t):
+    cur_time = time.time()
+
+    summary_writer.add_scalar("learning/speed", speed, t, cur_time)
 
     # manually flush to avoid loosing events on termination
     summary_writer.flush()
@@ -459,6 +467,9 @@ class Evaluator(object):
 
         if use_tensorboard:
             self.tb_writer = create_tb_writer(outdir)
+
+    def log_train_stats(self, speed, t):
+        record_tb_stats_from_training(self.tb_writer, speed, t)
 
     def evaluate_and_update_max_score(self, t, episodes):
         self.env_clear_stats()

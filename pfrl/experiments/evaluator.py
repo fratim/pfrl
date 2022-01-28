@@ -378,6 +378,7 @@ def save_agent(agent, t, outdir, logger, suffix=""):
     dirname = os.path.join(outdir, "{}{}".format(t, suffix))
     agent.save(dirname)
     logger.info("Saved the agent to %s", dirname)
+    return dirname
 
 
 def write_header(outdir, agent, env):

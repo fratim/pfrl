@@ -115,15 +115,18 @@ def train_agent(
             if checkpoint_freq and t % checkpoint_freq == 0:
                 save_agent(agent, t, outdir, logger, suffix="_checkpoint")
 
+        # Save the final model
+        save_agent_dir = save_agent(agent, t, outdir, logger, suffix="_finish")
+
     except (Exception, KeyboardInterrupt):
         # Save the current model before being killed
-        save_agent(agent, t, outdir, logger, suffix="_except")
-        raise
+        save_agent_dir = save_agent(agent, t, outdir, logger, suffix="_except")
+        info = {"success": False, "save_agent_dir": save_agent_dir, "steps": t}
 
-    # Save the final model
-    save_agent(agent, t, outdir, logger, suffix="_finish")
+        return info
 
-    return eval_stats_history
+    info = {"success": True, "save_agent_dir": save_agent_dir}
+    return info
 
 
 def train_agent_with_evaluation(
@@ -218,7 +221,7 @@ def train_agent_with_evaluation(
         logger=logger,
     )
 
-    eval_stats_history = train_agent(
+    info = train_agent(
         agent,
         env,
         steps,
@@ -233,4 +236,4 @@ def train_agent_with_evaluation(
         logger=logger,
     )
 
-    return agent, eval_stats_history
+    return info

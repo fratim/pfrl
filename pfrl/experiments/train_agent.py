@@ -4,6 +4,8 @@ import os
 from pfrl.experiments.evaluator import Evaluator, save_agent
 from pfrl.utils.ask_yes_no import ask_yes_no
 
+import pickle
+import time
 
 def save_agent_replay_buffer(agent, t, outdir, suffix="", logger=None):
     logger = logger or logging.getLogger(__name__)
@@ -50,9 +52,13 @@ def train_agent(
 
     eval_stats_history = []  # List of evaluation episode stats dict
     episode_len = 0
+
+    episode_start_time = time.time()
+    episode_steps = 0
+
     try:
         while t < steps:
-
+            
             # a_t
             action = agent.act(obs)
             # o_{t+1}, r_{t+1}
@@ -67,6 +73,8 @@ def train_agent(
                 hook(env, agent, t)
 
             episode_end = done or reset or t == steps
+            
+            episode_steps += 1
 
             if episode_end:
                 logger.info(
@@ -79,6 +87,11 @@ def train_agent(
                 stats = agent.get_statistics()
                 logger.info("statistics:%s", stats)
                 episode_idx += 1
+
+                episode_speed = episode_steps / (time.time() - episode_start_time)
+                evaluator.log_train_stats(episode_speed, t)
+                episode_start_time = time.time()
+                episode_steps = 0
 
             if evaluator is not None and (episode_end or eval_during_episode):
                 eval_score = evaluator.evaluate_if_necessary(t=t, episodes=episode_idx)
@@ -104,7 +117,12 @@ def train_agent(
 
     except (Exception, KeyboardInterrupt):
         # Save the current model before being killed
-        save_agent(agent, t, outdir, logger, suffix="_except")
+        agent_dir = save_agent(agent, t, outdir, logger, suffix="_except")
+        info = {"steps": t, "agent_dir": agent_dir}
+        
+        with open(outdir+"/except_info.pickle", 'wb') as handle:
+            pickle.dump(info, handle)
+        
         raise
 
     # Save the final model

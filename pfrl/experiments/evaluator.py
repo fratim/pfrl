@@ -365,11 +365,20 @@ def record_tb_stats_loop(outdir, queue, stop_event):
             agent_stats, eval_stats, env_stats, t = queue.get()
             record_tb_stats(tb_writer, agent_stats, eval_stats, env_stats, t)
 
+def record_tb_stats_from_training(summary_writer, speed, t):
+    cur_time = time.time()
+
+    summary_writer.add_scalar("learning/speed", speed, t, cur_time)
+
+    # manually flush to avoid loosing events on termination
+    summary_writer.flush()
+
 
 def save_agent(agent, t, outdir, logger, suffix=""):
     dirname = os.path.join(outdir, "{}{}".format(t, suffix))
     agent.save(dirname)
     logger.info("Saved the agent to %s", dirname)
+    return dirname
 
 
 def write_header(outdir, agent, env):
@@ -459,6 +468,11 @@ class Evaluator(object):
 
         if use_tensorboard:
             self.tb_writer = create_tb_writer(outdir)
+    
+    def log_train_stats(self, speed, t):
+        record_tb_stats_from_training(self.tb_writer, speed, t)
+
+
 
     def evaluate_and_update_max_score(self, t, episodes):
         self.env_clear_stats()

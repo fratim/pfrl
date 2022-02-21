@@ -173,7 +173,7 @@ def prepare_output_dir(
     module_dirs = get_module_directories()
 
     assert is_under_git_control()
-    parent_code_dir = os.path.dirname(sys.modules['__main__'].__file__)
+    parent_code_dir = os.getcwd()
 
     for dir in module_dirs:
         dir_command = dir if dir is not "parent" else "."

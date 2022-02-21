@@ -47,23 +47,37 @@ def generate_exp_id(prefix=None, argv=sys.argv) -> str:
     return "-".join(names)
 
 
-def save_git_information(outdir):
-    # Save `git rev-parse HEAD` (SHA of the current commit)
-    with open(os.path.join(outdir, "git-head.txt"), "wb") as f:
+def save_git_information(outdir, module_name):
+
+
+    with open(os.path.join(outdir, f"{module_name}-git-head.txt"), "wb") as f:
         f.write(subprocess.check_output("git rev-parse HEAD".split()))
 
     # Save `git status`
-    with open(os.path.join(outdir, "git-status.txt"), "wb") as f:
+    with open(os.path.join(outdir, f"{module_name}-git-status.txt"), "wb") as f:
         f.write(subprocess.check_output("git status".split()))
 
     # Save `git log`
-    with open(os.path.join(outdir, "git-log.txt"), "wb") as f:
+    with open(os.path.join(outdir, f"{module_name}-git-log.txt"), "wb") as f:
         f.write(subprocess.check_output("git log".split()))
 
     # Save `git diff`
-    with open(os.path.join(outdir, "git-diff.txt"), "wb") as f:
+    with open(os.path.join(outdir, f"{module_name}-git-diff.txt"), "wb") as f:
         f.write(subprocess.check_output("git diff HEAD".split()))
 
+def get_module_directories():
+    modules_strings = subprocess.check_output(["grep", "path", ".gitmodules"]).decode("utf-8").split("\n")
+    module_folders = []
+    for item in modules_strings:
+        if "=" not in item:
+            continue
+        else:
+            module_name_folder = item.split()[-1].strip()
+            module_folders.append(module_name_folder)
+
+    module_folders.append("parent")
+
+    return module_folders
 
 def prepare_output_dir(
     args,
@@ -156,7 +170,16 @@ def prepare_output_dir(
             argv = sys.argv
         f.write(" ".join(argv))
 
-    if is_under_git_control():
-        save_git_information(outdir)
+    module_dirs = get_module_directories()
+
+    assert is_under_git_control()
+    parent_code_dir = os.path.dirname(sys.modules['__main__'].__file__)
+
+    for dir in module_dirs:
+        dir_command = dir if dir is not "parent" else "."
+        os.chdir(os.path.join(parent_code_dir, dir_command))
+        save_git_information(outdir, dir)
+
+    os.chdir(parent_code_dir)
 
     return outdir
